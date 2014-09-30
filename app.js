@@ -5,29 +5,38 @@ var Crawler = require("crawler").Crawler;
 var elasticsearch = require('elasticsearch');
 
 var client = new elasticsearch.Client();
-var host = "www.passaicarea.org";
+var urlMemory = [];
+var sites = [ "bergenarea.org" ] //, "www.passaicarea.org" ];
 
 var c = new Crawler({
     "maxConnections":10,
     "callback":function(error,result,$) {
-        console.log(result.uri);
 
-        client.index({
-            index: 'arch',
-            type: 'page',
-            id: result.uri,
-            body: {
-                title: 'JavaScript Everywhere!',
-                content: result.body,
-                date: '2013-12-17'
-            }
-        });
+        // TODO: At some point will need to index more than just HTML.
+        if (result.headers["content-type"].indexOf("text/html") > -1) {
+            client.index({
+                index: 'arch',
+                type: 'page',
+                id: result.uri,
+                body: {
+                    title: $("title").text(),
+                    content: $("body").text(),
+                    url: result.uri
+                }
+            });
 
-        $("a").each(function(index,a) {
-            if (a.href.indexOf(host) > 0)
-            c.queue(a.href);
-        });
+            $("a").each(function (index, a) {
+                console.log(a.href);
+                if (urlMemory.indexOf(a.href) == -1 && sites.indexOf(a.hostname) > -1) {
+                    urlMemory.push(a.href);
+                    c.queue(a.href);
+                }
+            });
+        }
     }
 });
 
-c.queue("http://" + host);
+for (var i = 0; i < sites.length; i++) {
+    urlMemory.push(sites[i]);
+    c.queue("http://" + sites[i]);
+}

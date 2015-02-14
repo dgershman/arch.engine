@@ -1,0 +1,9 @@
+{
+    "name": "arch.engine",
+    "version": "0.0.1",
+    "dependencies": {
+        "crawler" : "0.2.7",
+        "elasticsearch" : "2.4.3",
+        "redis" : "0.12.1"
+    }
+}
